@@ -4,13 +4,13 @@ plugins {
 }
 
 android {
-    namespace = "vn.vkey.minh_nguyen.rulervaluepicker"
+    namespace = "vn.vkey.minh_nguyen.test"
     compileSdk {
         version = release(36)
     }
 
     defaultConfig {
-        applicationId = "vn.vkey.minh_nguyen.rulervaluepicker"
+        applicationId = "vn.vkey.minh_nguyen.test"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
@@ -34,6 +34,9 @@ android {
     }
     kotlinOptions {
         jvmTarget = "11"
+    }
+    viewBinding {
+        enable = true
     }
 }
 

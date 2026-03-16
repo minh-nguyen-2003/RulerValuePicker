@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.RulerValuePicker">
         <activity
-            android:name=".MainActivity"
+            android:name="vn.vkey.minh_nguyen.test.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
