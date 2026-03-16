@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="ScrollValuePicker">
+        <attr name="svp_minValue" format="float" />
+        <attr name="svp_maxValue" format="float" />
+        <attr name="svp_initialValue" format="float" />
+        <attr name="svp_stepValue" format="float" />
+        <attr name="svp_orientation" format="enum">
+            <enum name="horizontal_bottom" value="0" />
+            <enum name="horizontal_top" value="1" />
+            <enum name="vertical_left" value="2" />
+            <enum name="vertical_right" value="3" />
+        </attr>
+        <attr name="svp_indicatorColor" format="color" />
+        <attr name="svp_lineColor" format="color" />
+        <attr name="svp_textColor" format="color" />
+        <attr name="svp_textSize" format="dimension" />
+        <attr name="svp_showMajorTicks" format="boolean" />
+        <attr name="svp_showHalfTicks" format="boolean" />
+        <attr name="svp_centerTicks" format="boolean" />
+    </declare-styleable>
+</resources>

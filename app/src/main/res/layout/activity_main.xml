@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <LinearLayout
+        android:id="@+id/main"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- ========== HORIZONTAL BOTTOM ========== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Horizontal Bottom (▼)"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginTop="8dp" />
+
+        <TextView
+            android:id="@+id/tvValueHorizontalBottom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Value: 50"
+            android:textSize="20sp"
+            android:textColor="#26A69A"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="4dp" />
+
+        <vn.vkey.minh_nguyen.rulervaluepicker.RulerValuePicker
+            android:id="@+id/pickerHorizontalBottom"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#FAFAFA"
+            app:svp_showMajorTicks="true"
+            app:svp_showHalfTicks="false"
+            app:svp_minValue="0"
+            app:svp_maxValue="200"
+            app:svp_centerTicks="true"
+            app:svp_initialValue="50"
+            app:svp_stepValue="1"
+            app:svp_orientation="horizontal_bottom"
+            app:svp_indicatorColor="#26A69A"
+            app:svp_lineColor="#BDBDBD"
+            app:svp_textColor="#616161"
+            app:svp_textSize="12sp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#E0E0E0"
+            android:layout_marginVertical="16dp" />
+
+        <!-- ========== HORIZONTAL TOP ========== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Horizontal Top (▲)"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvValueHorizontalTop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Value: 50"
+            android:textSize="20sp"
+            android:textColor="#EF5350"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="4dp" />
+
+        <vn.vkey.minh_nguyen.rulervaluepicker.RulerValuePicker
+            android:id="@+id/pickerHorizontalTop"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#FAFAFA"
+            app:svp_minValue="0"
+            app:svp_maxValue="200"
+            app:svp_initialValue="50"
+            app:svp_stepValue="1"
+            app:svp_centerTicks="true"
+            app:svp_orientation="horizontal_top"
+            app:svp_indicatorColor="#EF5350"
+            app:svp_lineColor="#BDBDBD"
+            app:svp_textColor="#616161"
+            app:svp_textSize="12sp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#E0E0E0"
+            android:layout_marginVertical="16dp" />
+
+        <!-- ========== VERTICAL PICKERS (side by side) ========== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Vertical Left (▶) &amp; Vertical Right (◀)"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp">
+
+            <!-- Vertical Left -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center_horizontal">
+
+                <TextView
+                    android:id="@+id/tvValueVerticalLeft"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Value: 50"
+                    android:textSize="18sp"
+                    android:textColor="#42A5F5" />
+
+                <vn.vkey.minh_nguyen.rulervaluepicker.RulerValuePicker
+                    android:id="@+id/pickerVerticalLeft"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:background="#FAFAFA"
+                    app:svp_minValue="0"
+                    app:svp_maxValue="200"
+                    app:svp_initialValue="50"
+                    app:svp_centerTicks="true"
+                    app:svp_stepValue="1"
+                    app:svp_orientation="vertical_left"
+                    app:svp_indicatorColor="#42A5F5"
+                    app:svp_lineColor="#BDBDBD"
+                    app:svp_textColor="#616161"
+                    app:svp_textSize="11sp" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:background="#E0E0E0"
+                android:layout_marginHorizontal="8dp" />
+
+            <!-- Vertical Right -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center_horizontal">
+
+                <TextView
+                    android:id="@+id/tvValueVerticalRight"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Value: 50"
+                    android:textSize="18sp"
+                    android:textColor="#AB47BC" />
+
+                <vn.vkey.minh_nguyen.rulervaluepicker.RulerValuePicker
+                    android:id="@+id/pickerVerticalRight"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:background="#FAFAFA"
+                    app:svp_minValue="0"
+                    app:svp_centerTicks="true"
+                    app:svp_maxValue="200"
+                    app:svp_initialValue="50"
+                    app:svp_stepValue="1"
+                    app:svp_orientation="vertical_right"
+                    app:svp_indicatorColor="#AB47BC"
+                    app:svp_lineColor="#BDBDBD"
+                    app:svp_textColor="#616161"
+                    app:svp_textSize="11sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>
