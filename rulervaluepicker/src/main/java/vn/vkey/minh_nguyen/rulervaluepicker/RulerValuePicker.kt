@@ -16,10 +16,10 @@ import kotlin.math.roundToInt
 
 /**
  * A scroll-based ruler/value picker that supports 4 orientations:
- *  - horizontal_bottom: ruler on bottom, indicator arrow on top  (▼)
- *  - horizontal_top:    ruler on top, indicator arrow on bottom  (▲)
- *  - vertical_left:     ruler on left, indicator arrow on right  (◀ pointing left, indicator right)
- *  - vertical_right:    ruler on right, indicator arrow on left  (▶ pointing right, indicator left)
+ *  - horizontal_bottom: ruler on bottom, indicator arrow on top
+ *  - horizontal_top:    ruler on top, indicator arrow on bottom
+ *  - vertical_left:     ruler on left, labels on right
+ *  - vertical_right:    ruler on right, labels on left
  */
 class RulerValuePicker @JvmOverloads constructor(
     context: Context,
@@ -38,8 +38,8 @@ class RulerValuePicker @JvmOverloads constructor(
         private const val DEFAULT_INITIAL = 50f
         private const val DEFAULT_STEP = 1f
 
-        private const val DEFAULT_LINE_COLOR = 0xFFBDBDBD.toInt()      // light grey
-        private const val DEFAULT_TEXT_COLOR = 0xFF616161.toInt()       // dark grey
+        private const val DEFAULT_LINE_COLOR = 0xFFBDBDBD.toInt()
+        private const val DEFAULT_TEXT_COLOR = 0xFF616161.toInt()
         private const val DEFAULT_TEXT_SIZE_SP = 14f
 
         private const val TICK_SPACING_DP = 12f
@@ -50,6 +50,8 @@ class RulerValuePicker @JvmOverloads constructor(
 
         private const val TICK_WIDTH_DP = 1f
         private const val MAJOR_TICK_WIDTH_DP = 1.5f
+        private const val LABEL_MARGIN_DP = 12f
+
         private const val MAJOR_TICK_INTERVAL = 10
         private const val HALF_TICK_INTERVAL = 5
     }
@@ -63,7 +65,6 @@ class RulerValuePicker @JvmOverloads constructor(
     private var showHalfTicks = true
     private var centerTicks = false
 
-
     private var lineColor = DEFAULT_LINE_COLOR
     private var textColor = DEFAULT_TEXT_COLOR
     private var textSizePx: Float
@@ -74,15 +75,18 @@ class RulerValuePicker @JvmOverloads constructor(
     private var majorTickLenPx: Float
     private var halfTickLenPx: Float
     private var indicatorSizePx: Float
-
     private var tickWidthPx: Float
     private var majorTickWidthPx: Float
+    private var labelMarginPx: Float
 
-    private val totalSteps: Int get() = ((maxValue - minValue) / stepValue).roundToInt()
-    private val totalTrackLength: Float get() = totalSteps * tickSpacingPx
+    private val totalSteps: Int
+        get() = ((maxValue - minValue) / stepValue).roundToInt()
+
+    private val totalTrackLength: Float
+        get() = totalSteps * tickSpacingPx
 
     // ---- Scroll state ----
-    /** Current scroll offset in pixels (0 = minValue is centred) */
+    /** Current scroll offset in pixels (0 = minValue is centered) */
     private var scrollOffset = 0f
     private val scroller = OverScroller(context)
     private var velocityTracker: VelocityTracker? = null
@@ -104,15 +108,19 @@ class RulerValuePicker @JvmOverloads constructor(
     init {
         val density = resources.displayMetrics.density
 
-        textSizePx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, DEFAULT_TEXT_SIZE_SP, resources.displayMetrics)
+        textSizePx = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_SP,
+            DEFAULT_TEXT_SIZE_SP,
+            resources.displayMetrics
+        )
         tickSpacingPx = TICK_SPACING_DP * density
         minorTickLenPx = MINOR_TICK_LENGTH_DP * density
         majorTickLenPx = MAJOR_TICK_LENGTH_DP * density
         halfTickLenPx = HALF_TICK_LENGTH_DP * density
         indicatorSizePx = INDICATOR_SIZE_DP * density
-
         tickWidthPx = TICK_WIDTH_DP * density
         majorTickWidthPx = MAJOR_TICK_WIDTH_DP * density
+        labelMarginPx = LABEL_MARGIN_DP * density
 
         attrs?.let {
             val ta = context.obtainStyledAttributes(it, R.styleable.ScrollValuePicker, defStyleAttr, 0)
@@ -120,7 +128,10 @@ class RulerValuePicker @JvmOverloads constructor(
             maxValue = ta.getFloat(R.styleable.ScrollValuePicker_svp_maxValue, DEFAULT_MAX)
             val initialValue = ta.getFloat(R.styleable.ScrollValuePicker_svp_initialValue, DEFAULT_INITIAL)
             stepValue = ta.getFloat(R.styleable.ScrollValuePicker_svp_stepValue, DEFAULT_STEP)
-            orientation = ta.getInt(R.styleable.ScrollValuePicker_svp_orientation, ORIENTATION_HORIZONTAL_BOTTOM)
+            orientation = ta.getInt(
+                R.styleable.ScrollValuePicker_svp_orientation,
+                ORIENTATION_HORIZONTAL_BOTTOM
+            )
 
             lineColor = ta.getColor(R.styleable.ScrollValuePicker_svp_lineColor, DEFAULT_LINE_COLOR)
             textColor = ta.getColor(R.styleable.ScrollValuePicker_svp_textColor, DEFAULT_TEXT_COLOR)
@@ -130,7 +141,6 @@ class RulerValuePicker @JvmOverloads constructor(
             centerTicks = ta.getBoolean(R.styleable.ScrollValuePicker_svp_centerTicks, false)
             ta.recycle()
 
-            // Set initial scroll offset
             scrollOffset = ((initialValue - minValue) / stepValue) * tickSpacingPx
         }
 
@@ -143,17 +153,18 @@ class RulerValuePicker @JvmOverloads constructor(
             strokeWidth = tickWidthPx
             style = Paint.Style.STROKE
         }
+
         majorTickPaint.apply {
             color = lineColor
             strokeWidth = majorTickWidthPx
             style = Paint.Style.STROKE
         }
+
         textPaint.apply {
             color = textColor
             textSize = textSizePx
             textAlign = Paint.Align.CENTER
         }
-
     }
 
     // ---- Value helpers ----
@@ -180,6 +191,11 @@ class RulerValuePicker @JvmOverloads constructor(
 
     fun getValue(): Float = currentValue
 
+    private fun isHorizontal(): Boolean {
+        return orientation == ORIENTATION_HORIZONTAL_BOTTOM ||
+                orientation == ORIENTATION_HORIZONTAL_TOP
+    }
+
     // ---- Measure ----
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val density = resources.displayMetrics.density
@@ -190,28 +206,24 @@ class RulerValuePicker @JvmOverloads constructor(
         }
         val textSpace = if (showMajorTicks) textSizePx + 4f * density else 0f
 
-        when {
-            isHorizontal() -> {
-                val desiredHeight = (maxTickLen + textSpace + indicatorSizePx * 2 + 24 * density).toInt()
-                val w = resolveSize(
-                    (300 * density).toInt(), widthMeasureSpec
-                )
-                val h = resolveSize(desiredHeight, heightMeasureSpec)
-                setMeasuredDimension(w, h)
-            }
-            else -> {
-                val desiredWidth = (maxTickLen + (if (showMajorTicks) textSizePx * 3 else 0f) + indicatorSizePx * 2 + 24 * density).toInt()
-                val w = resolveSize(desiredWidth, widthMeasureSpec)
-                val h = resolveSize(
-                    (300 * density).toInt(), heightMeasureSpec
-                )
-                setMeasuredDimension(w, h)
-            }
+        if (isHorizontal()) {
+            val desiredHeight = (maxTickLen + textSpace + indicatorSizePx * 2 + 24 * density).toInt()
+            val w = resolveSize((300 * density).toInt(), widthMeasureSpec)
+            val h = resolveSize(desiredHeight, heightMeasureSpec)
+            setMeasuredDimension(w, h)
+        } else {
+            val desiredWidth = (
+                    maxTickLen +
+                            (if (showMajorTicks) textSizePx * 3 else 0f) +
+                            labelMarginPx +
+                            indicatorSizePx * 2 +
+                            24 * density
+                    ).toInt()
+            val w = resolveSize(desiredWidth, widthMeasureSpec)
+            val h = resolveSize((300 * density).toInt(), heightMeasureSpec)
+            setMeasuredDimension(w, h)
         }
     }
-
-    private fun isHorizontal() =
-        orientation == ORIENTATION_HORIZONTAL_BOTTOM || orientation == ORIENTATION_HORIZONTAL_TOP
 
     // ---- Draw ----
     override fun onDraw(canvas: Canvas) {
@@ -224,19 +236,16 @@ class RulerValuePicker @JvmOverloads constructor(
         }
     }
 
-    // ============================
-    //  HORIZONTAL BOTTOM
-    //  Indicator ▼ on top, ruler ticks pointing downward from a baseline
-    // ============================
     private fun drawHorizontalBottom(canvas: Canvas) {
         val centerX = width / 2f
-        val rulerTop = indicatorSizePx * 2 + 4f * resources.displayMetrics.density
+        val density = resources.displayMetrics.density
+        val rulerTop = indicatorSizePx * 2 + 4f * density
 
-
-        // Draw ticks
         val halfWidth = width / 2f
         val startStep = max(0, ((scrollOffset - halfWidth) / tickSpacingPx).toInt() - 1)
         val endStep = min(totalSteps, ((scrollOffset + halfWidth) / tickSpacingPx).toInt() + 1)
+
+        textPaint.textAlign = Paint.Align.CENTER
 
         for (i in startStep..endStep) {
             val x = centerX + i * tickSpacingPx - scrollOffset
@@ -265,33 +274,37 @@ class RulerValuePicker @JvmOverloads constructor(
             }
             val centerOffset = if (centerTicks) (maxTickLen - tickLen) / 2f else 0f
 
-            canvas.drawLine(x, rulerTop + centerOffset, x, rulerTop + centerOffset + tickLen, paint)
+            canvas.drawLine(
+                x,
+                rulerTop + centerOffset,
+                x,
+                rulerTop + centerOffset + tickLen,
+                paint
+            )
 
             if (i % MAJOR_TICK_INTERVAL == 0 && showMajorTicks) {
                 val labelValue = minValue + i * stepValue
-                val label = formatLabel(labelValue)
-                canvas.drawText(label, x, rulerTop + majorTickLenPx + textSizePx + 4f * resources.displayMetrics.density, textPaint)
+                canvas.drawText(
+                    formatLabel(labelValue),
+                    x,
+                    rulerTop + majorTickLenPx + textSizePx + 4f * density,
+                    textPaint
+                )
             }
         }
     }
 
-    // ============================
-    //  HORIZONTAL TOP
-    //  Indicator ▲ on bottom, ruler ticks pointing upward from a baseline
-    // ============================
     private fun drawHorizontalTop(canvas: Canvas) {
         val centerX = width / 2f
         val density = resources.displayMetrics.density
         val textAreaHeight = textSizePx + 4f * density
-
-        // Text area at top
-        // Ruler baseline: after text area
         val rulerBottom = textAreaHeight + majorTickLenPx + 4f * density
-
 
         val halfWidth = width / 2f
         val startStep = max(0, ((scrollOffset - halfWidth) / tickSpacingPx).toInt() - 1)
         val endStep = min(totalSteps, ((scrollOffset + halfWidth) / tickSpacingPx).toInt() + 1)
+
+        textPaint.textAlign = Paint.Align.CENTER
 
         for (i in startStep..endStep) {
             val x = centerX + i * tickSpacingPx - scrollOffset
@@ -299,9 +312,18 @@ class RulerValuePicker @JvmOverloads constructor(
             val paint: Paint
 
             when {
-                i % MAJOR_TICK_INTERVAL == 0 && showMajorTicks -> { tickLen = majorTickLenPx; paint = majorTickPaint }
-                i % HALF_TICK_INTERVAL == 0 && showHalfTicks -> { tickLen = halfTickLenPx; paint = tickPaint }
-                else -> { tickLen = minorTickLenPx; paint = tickPaint }
+                i % MAJOR_TICK_INTERVAL == 0 && showMajorTicks -> {
+                    tickLen = majorTickLenPx
+                    paint = majorTickPaint
+                }
+                i % HALF_TICK_INTERVAL == 0 && showHalfTicks -> {
+                    tickLen = halfTickLenPx
+                    paint = tickPaint
+                }
+                else -> {
+                    tickLen = minorTickLenPx
+                    paint = tickPaint
+                }
             }
 
             val maxTickLen = when {
@@ -311,29 +333,37 @@ class RulerValuePicker @JvmOverloads constructor(
             }
             val centerOffset = if (centerTicks) (maxTickLen - tickLen) / 2f else 0f
 
-            canvas.drawLine(x, rulerBottom - centerOffset, x, rulerBottom - centerOffset - tickLen, paint)
+            canvas.drawLine(
+                x,
+                rulerBottom - centerOffset,
+                x,
+                rulerBottom - centerOffset - tickLen,
+                paint
+            )
 
             if (i % MAJOR_TICK_INTERVAL == 0 && showMajorTicks) {
                 val labelValue = minValue + i * stepValue
-                canvas.drawText(formatLabel(labelValue), x, textAreaHeight - 2f * density, textPaint)
+                canvas.drawText(
+                    formatLabel(labelValue),
+                    x,
+                    textAreaHeight - 2f * density,
+                    textPaint
+                )
             }
         }
-
     }
 
-    // ============================
-    //  VERTICAL LEFT
-    //  Ruler ticks on the left, indicator ▶ on right
-    // ============================
     private fun drawVerticalLeft(canvas: Canvas) {
         val centerY = height / 2f
         val density = resources.displayMetrics.density
         val rulerRight = majorTickLenPx + 4f * density
-        val textAreaLeft = rulerRight + 4f * density
+        val labelX = rulerRight + labelMarginPx
 
         val halfHeight = height / 2f
         val startStep = max(0, ((scrollOffset - halfHeight) / tickSpacingPx).toInt() - 1)
         val endStep = min(totalSteps, ((scrollOffset + halfHeight) / tickSpacingPx).toInt() + 1)
+
+        textPaint.textAlign = Paint.Align.LEFT
 
         for (i in startStep..endStep) {
             val y = centerY + i * tickSpacingPx - scrollOffset
@@ -341,9 +371,18 @@ class RulerValuePicker @JvmOverloads constructor(
             val paint: Paint
 
             when {
-                i % MAJOR_TICK_INTERVAL == 0 && showMajorTicks -> { tickLen = majorTickLenPx; paint = majorTickPaint }
-                i % HALF_TICK_INTERVAL == 0 && showHalfTicks -> { tickLen = halfTickLenPx; paint = tickPaint }
-                else -> { tickLen = minorTickLenPx; paint = tickPaint }
+                i % MAJOR_TICK_INTERVAL == 0 && showMajorTicks -> {
+                    tickLen = majorTickLenPx
+                    paint = majorTickPaint
+                }
+                i % HALF_TICK_INTERVAL == 0 && showHalfTicks -> {
+                    tickLen = halfTickLenPx
+                    paint = tickPaint
+                }
+                else -> {
+                    tickLen = minorTickLenPx
+                    paint = tickPaint
+                }
             }
 
             val maxTickLen = when {
@@ -353,29 +392,37 @@ class RulerValuePicker @JvmOverloads constructor(
             }
             val centerOffset = if (centerTicks) (maxTickLen - tickLen) / 2f else 0f
 
-            canvas.drawLine(rulerRight - centerOffset, y, rulerRight - centerOffset - tickLen, y, paint)
+            canvas.drawLine(
+                rulerRight - centerOffset,
+                y,
+                rulerRight - centerOffset - tickLen,
+                y,
+                paint
+            )
 
             if (i % MAJOR_TICK_INTERVAL == 0 && showMajorTicks) {
                 val labelValue = minValue + i * stepValue
-                canvas.drawText(formatLabel(labelValue), textAreaLeft + textSizePx, y + textSizePx * 0.35f, textPaint.apply { textAlign = Paint.Align.CENTER })
+                canvas.drawText(
+                    formatLabel(labelValue),
+                    labelX,
+                    y + textSizePx * 0.35f,
+                    textPaint
+                )
             }
         }
-
     }
 
-    // ============================
-    //  VERTICAL RIGHT
-    //  Ruler ticks on the right, indicator ◀ on left
-    // ============================
     private fun drawVerticalRight(canvas: Canvas) {
         val centerY = height / 2f
         val density = resources.displayMetrics.density
         val rulerLeft = width - majorTickLenPx - 4f * density
-        val textAreaRight = rulerLeft - 4f * density
+        val labelX = rulerLeft - labelMarginPx
 
         val halfHeight = height / 2f
         val startStep = max(0, ((scrollOffset - halfHeight) / tickSpacingPx).toInt() - 1)
         val endStep = min(totalSteps, ((scrollOffset + halfHeight) / tickSpacingPx).toInt() + 1)
+
+        textPaint.textAlign = Paint.Align.RIGHT
 
         for (i in startStep..endStep) {
             val y = centerY + i * tickSpacingPx - scrollOffset
@@ -383,9 +430,18 @@ class RulerValuePicker @JvmOverloads constructor(
             val paint: Paint
 
             when {
-                i % MAJOR_TICK_INTERVAL == 0 && showMajorTicks -> { tickLen = majorTickLenPx; paint = majorTickPaint }
-                i % HALF_TICK_INTERVAL == 0 && showHalfTicks -> { tickLen = halfTickLenPx; paint = tickPaint }
-                else -> { tickLen = minorTickLenPx; paint = tickPaint }
+                i % MAJOR_TICK_INTERVAL == 0 && showMajorTicks -> {
+                    tickLen = majorTickLenPx
+                    paint = majorTickPaint
+                }
+                i % HALF_TICK_INTERVAL == 0 && showHalfTicks -> {
+                    tickLen = halfTickLenPx
+                    paint = tickPaint
+                }
+                else -> {
+                    tickLen = minorTickLenPx
+                    paint = tickPaint
+                }
             }
 
             val maxTickLen = when {
@@ -395,17 +451,26 @@ class RulerValuePicker @JvmOverloads constructor(
             }
             val centerOffset = if (centerTicks) (maxTickLen - tickLen) / 2f else 0f
 
-            canvas.drawLine(rulerLeft + centerOffset, y, rulerLeft + centerOffset + tickLen, y, paint)
+            canvas.drawLine(
+                rulerLeft + centerOffset,
+                y,
+                rulerLeft + centerOffset + tickLen,
+                y,
+                paint
+            )
 
             if (i % MAJOR_TICK_INTERVAL == 0 && showMajorTicks) {
                 val labelValue = minValue + i * stepValue
-                canvas.drawText(formatLabel(labelValue), textAreaRight - textSizePx * 0.5f, y + textSizePx * 0.35f, textPaint.apply { textAlign = Paint.Align.CENTER })
+                canvas.drawText(
+                    formatLabel(labelValue),
+                    labelX,
+                    y + textSizePx * 0.35f,
+                    textPaint
+                )
             }
         }
-
     }
 
-    // ---- Label formatting ----
     private fun formatLabel(value: Float): String {
         return if (value == value.toLong().toFloat()) {
             value.toLong().toString()
@@ -414,9 +479,7 @@ class RulerValuePicker @JvmOverloads constructor(
         }
     }
 
-    // ================================
-    //  TOUCH & SCROLL
-    // ================================
+    // ---- Touch & Scroll ----
     override fun onTouchEvent(event: MotionEvent): Boolean {
         val pos = if (isHorizontal()) event.x else event.y
 
@@ -427,10 +490,10 @@ class RulerValuePicker @JvmOverloads constructor(
                 velocityTracker = VelocityTracker.obtain()
                 velocityTracker?.addMovement(event)
                 lastTouchPos = pos
-
                 parent?.requestDisallowInterceptTouchEvent(true)
                 return true
             }
+
             MotionEvent.ACTION_MOVE -> {
                 velocityTracker?.addMovement(event)
                 val delta = lastTouchPos - pos
@@ -440,6 +503,7 @@ class RulerValuePicker @JvmOverloads constructor(
                 invalidate()
                 return true
             }
+
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 velocityTracker?.let { vt ->
                     vt.addMovement(event)
@@ -453,6 +517,7 @@ class RulerValuePicker @JvmOverloads constructor(
                 return true
             }
         }
+
         return super.onTouchEvent(event)
     }
 
@@ -463,10 +528,14 @@ class RulerValuePicker @JvmOverloads constructor(
     private fun fling(velocity: Float) {
         scroller.forceFinished(true)
         scroller.fling(
-            scrollOffset.toInt(), 0,
-            velocity.toInt(), 0,
-            0, totalTrackLength.toInt(),
-            0, 0
+            scrollOffset.toInt(),
+            0,
+            velocity.toInt(),
+            0,
+            0,
+            totalTrackLength.toInt(),
+            0,
+            0
         )
         postInvalidateOnAnimation()
     }
@@ -475,9 +544,11 @@ class RulerValuePicker @JvmOverloads constructor(
         if (scroller.computeScrollOffset()) {
             scrollOffset = clampOffset(scroller.currX.toFloat())
             reportValue()
+
             if (scroller.isFinished) {
                 snapToNearest()
             }
+
             postInvalidateOnAnimation()
         }
     }
@@ -486,10 +557,12 @@ class RulerValuePicker @JvmOverloads constructor(
         val nearestStep = (scrollOffset / tickSpacingPx).roundToInt()
         val targetOffset = (nearestStep * tickSpacingPx).coerceIn(0f, totalTrackLength)
         val dx = (targetOffset - scrollOffset).toInt()
+
         if (abs(dx) > 0) {
             scroller.startScroll(scrollOffset.toInt(), 0, dx, 0, 150)
             postInvalidateOnAnimation()
         }
+
         reportValue()
     }
 }
