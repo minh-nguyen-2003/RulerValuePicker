@@ -17,3 +17,11 @@ local.properties
 /gradle/wrapper/gradle-wrapper.jar
 /gradlew
 /gradlew.bat
+/.idea/AndroidProjectSystem.xml
+/.idea/compiler.xml
+/.idea/deploymentTargetSelector.xml
+/.idea/gradle.xml
+/.idea/migrations.xml
+/.idea/runConfigurations.xml
+/.idea/misc.xml
+/.idea/vcs.xml
